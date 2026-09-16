@@ -1,0 +1,5 @@
+fastapi[Standard]
+uvicorn
+langchain-huggingface
+semantic_chunker_langchain
+sentence-transformers
