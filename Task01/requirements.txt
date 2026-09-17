@@ -3,3 +3,5 @@ uvicorn
 langchain-huggingface
 semantic_chunker_langchain
 sentence-transformers
+faiss-cpu
+numpy

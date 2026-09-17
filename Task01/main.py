@@ -23,6 +23,11 @@ from semantic_chunker_langchain.chunker import SemanticChunker
 from models.ChunkingStrategyEnum import ChunkingStrategy
 from schema import ChunkResponse
 
+from faiss_vector_store import (
+    create_vector_store,
+    load_vector_store,
+    save_vector_store
+)
 
 load_dotenv()
 
@@ -40,6 +45,8 @@ def upload_file(
     ),
     chunk_size: int = 100,
     chunk_overlap: int = 20,
+    seprator : str = "",
+    query : str = ""
 ):
     if not file.filename:
         raise HTTPException(
@@ -70,6 +77,7 @@ def upload_file(
             docs,
             chunk_size,
             chunk_overlap,
+            seprator
         )
 
     elif technique_name == ChunkingStrategy.RecurChunk:
@@ -77,6 +85,7 @@ def upload_file(
             docs,
             chunk_size,
             chunk_overlap,
+            seprator
         )
 
     elif technique_name == ChunkingStrategy.Semantic:
@@ -88,6 +97,13 @@ def upload_file(
             chunk_size,
             chunk_overlap,
         )
+    print(type(result))
+
+    vector_store = create_vector_store(result)
+
+    save_vector_store(vector_store)
+
+    query_result = vector_store.similarity_search(query , k=2)
 
     page_content = [doc.page_content for doc in result]
 
@@ -98,6 +114,7 @@ def upload_file(
         chunk_strategy=technique_name,
         no_of_chunk=len(page_content),
         page_content=page_content,
+        answer= query_result
     )
 
     return chunk_response
@@ -107,10 +124,12 @@ def recursive_chunking(
     docs: list,
     size: int,
     overlap: int,
+    seprator : str
 ):
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=size,
         chunk_overlap=overlap,
+        seprator = seprator
     )
 
     return splitter.split_documents(docs)
@@ -120,11 +139,12 @@ def character_chunking(
     docs: list,
     size: int,
     overlap: int,
+    seprator : str
 ):
     splitter = CharacterTextSplitter(
         chunk_size=size,
         chunk_overlap=overlap,
-        separator="",
+        separator=seprator,
     )
 
     return splitter.split_documents(docs)
