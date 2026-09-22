@@ -11,7 +11,7 @@ if not os.getenv("HF_TOKEN"):
 
 
 embedding = HuggingFaceEmbeddings(
-    model_name = "sentence-transformers/all-MiniLM-L6-v2"
+    model_name = r"D:\all-MiniLM-L6-v2"
 )
 
 

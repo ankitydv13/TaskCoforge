@@ -63,7 +63,7 @@ def upload_file(
     technique_name: ChunkingStrategy = 
         ChunkingStrategy.CharacterChunk,
     vector_db : VectorStoreEnum = 
-        VectorStoreEnum.faiss,
+        VectorStoreEnum.chromadb,
     query : str = Query(...),
     chunk_config: str = Form(...),
     file: UploadFile = File(...)
@@ -203,7 +203,7 @@ def recursive_chunking(
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=size,
         chunk_overlap=overlap,
-        separator = separator
+        separators = list(separator)
     )
 
     return splitter.split_documents(docs)
@@ -226,7 +226,7 @@ def character_chunking(
 
 def semantic_chunking(docs: list):
     embeddings = HuggingFaceEmbeddings(
-        model_name="sentence-transformers/all-MiniLM-L6-v2"
+        model_name= r"D:\all-MiniLM-L6-v2"
     )
 
     splitter = SemanticChunker(
