@@ -34,4 +34,10 @@ class ChunkConfig(BaseModel):
 
         return value
     
+class UpdateChunkRequest(BaseModel):
+    doc_id: str
+    new_text: str
 
+class UpdatePolicyRequest(BaseModel):
+    search_text: str     
+    new_text: str    
