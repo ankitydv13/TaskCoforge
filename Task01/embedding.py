@@ -15,6 +15,6 @@ embedding = HuggingFaceEmbeddings(
 )
 
 
-# if __name__ == "__main__":
-#     vector = embedding.embed_query("Who am I ?")
-#     print(vector)
+if __name__ == "__main__":
+    vector = embedding.embed_query("Who am I ?")
+    print(vector)

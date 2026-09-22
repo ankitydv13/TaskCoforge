@@ -1,7 +1,10 @@
-fastapi[Standard]
+fastapi[standard]
 uvicorn
+langchain
 langchain-huggingface
-semantic_chunker_langchain
+langchain-experimental
 sentence-transformers
 faiss-cpu
 numpy
+chromadb
+langchain_chroma
