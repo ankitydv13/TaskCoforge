@@ -14,24 +14,16 @@ COLLECTION_NAME = "pdf_chunks"
  
  
 def get_chroma_store() -> Chroma:
-    """
-    Returns a Chroma vector store instance backed by a persistent
-    on-disk directory. Safe to call repeatedly — Chroma handles
-    loading the existing collection if it already exists.
-    """
+    
     return Chroma(
         collection_name=COLLECTION_NAME,
-        embedding_function=embedding.embedding,
+        embedding_function=embedding,
         persist_directory=str(CHROMA_DIR),
     )
  
  
 def add_documents_to_chroma(documents: List[Document], file_id: str) -> List[str]:
-    """
-    Adds chunks to Chroma, tagging every chunk with a stable file_id
-    so they can be found/updated/deleted later as a group.
-    Returns the list of generated chunk IDs.
-    """
+    
     vector_store = get_chroma_store()
  
     ids = [str(uuid.uuid4()) for _ in documents]
@@ -46,10 +38,7 @@ def add_documents_to_chroma(documents: List[Document], file_id: str) -> List[str
  
  
 def update_document_by_id(doc_id: str, new_text: str, new_metadata: dict = None) -> None:
-    """
-    Updates a single chunk in place, identified by its Chroma ID.
-    Re-embeds the new text and replaces both content and metadata.
-    """
+    
     vector_store = get_chroma_store()
  
     existing = vector_store.get(ids=[doc_id])
@@ -65,18 +54,13 @@ def update_document_by_id(doc_id: str, new_text: str, new_metadata: dict = None)
  
  
 def find_chunks_by_metadata(key: str, value) -> dict:
-    """
-    Returns all chunks matching a metadata filter, e.g. file_id or source.
-    """
+    
     vector_store = get_chroma_store()
     return vector_store.get(where={key: value})
  
  
 def delete_chunks_by_metadata(key: str, value) -> int:
-    """
-    Deletes every chunk matching a metadata filter (e.g. all chunks
-    belonging to one uploaded file). Returns count deleted.
-    """
+    
     vector_store = get_chroma_store()
     matches = vector_store.get(where={key: value})
     ids_to_delete = matches["ids"]

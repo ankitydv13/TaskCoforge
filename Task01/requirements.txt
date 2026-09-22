@@ -8,3 +8,5 @@ faiss-cpu
 numpy
 chromadb
 langchain_chroma
+pandas
+pypdf

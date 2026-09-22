@@ -1,6 +1,7 @@
 from pathlib import Path
 import shutil
 
+
 from dotenv import load_dotenv
 from fastapi import (
     FastAPI,
@@ -33,10 +34,19 @@ from faiss_vector_store import (
     display_vector_db
 )
 
+from chroma_db_vector_store import (
+    add_documents_to_chroma,
+    update_document_by_id,
+    find_chunks_by_metadata,
+    delete_chunks_by_metadata,
+    get_chroma_store
+)
+
 from embedding import embedding
 import faiss
 
 import json
+import uuid
 
 load_dotenv()
 
@@ -115,6 +125,10 @@ def upload_file(
     # vector_store = create_vector_store(result)
     vector_store = faiss_with_cosine(result)
     display_vector_db(vector_store,20)
+
+    file_id = str(uuid.uuid4())
+    chunk_ids = add_documents_to_chroma(result, file_id=file_id)
+    print(chunk_ids)
 
     # save_vector_store(vector_store)
 
