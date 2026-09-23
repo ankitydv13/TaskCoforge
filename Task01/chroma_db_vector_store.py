@@ -6,35 +6,51 @@ from langchain_chroma import Chroma
 from langchain_core.documents import Document
  
 from embedding import embedding
- 
+
+import hashlib
+
+#TODO : Use of the os module 
 CHROMA_DIR = Path("chroma_db")
 CHROMA_DIR.mkdir(exist_ok=True)
- 
+
+# Todo: Take from the env and have multiple collections->(10)
 COLLECTION_NAME = "pdf_chunks"
+
+import chromadb
  
  
 def get_chroma_store() -> Chroma:
+
+    client = chromadb.PersistentClient(CHROMA_DIR)
     
     return Chroma(
+        client = client,
         collection_name=COLLECTION_NAME,
-        embedding_function=embedding,
-        persist_directory=str(CHROMA_DIR),
+        embedding_function=embedding
     )
+
+def create_chunk_id(file_id:str,content:str):
+    return hashlib.sha256(
+        f"{file_id} : {content}".encode("utf-8")
+    ).hexdigest()
  
- 
-def add_documents_to_chroma(documents: List[Document], file_id: str) -> List[str]:
+def add_documents_to_chroma(documents: List[Document], file_id: str , collection_name : str) -> List[str]:
     
     vector_store = get_chroma_store()
- 
-    ids = [str(uuid.uuid4()) for _ in documents]
+    client = vector_store._client
+    collection = client.get_collection(collection_name)
  
     # tag every chunk with file_id so we can filter/delete/update by source later
     for doc in documents:
         doc.metadata["file_id"] = file_id
  
-    vector_store.add_documents(documents=documents, ids=ids)
+    collection.upsert(
+        ids = [create_chunk_id(file_id , _.page_content) for _ in documents] ,
+        documents = [d.page_content for d in documents],
+        metadatas = [d.metadata for d in documents]
+    )
  
-    return ids
+    print("No of vector in chroma ",collection.count())
  
  
 def update_document_by_id(doc_id: str, new_text: str, new_metadata: dict = None) -> None:

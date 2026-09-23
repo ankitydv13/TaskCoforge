@@ -49,6 +49,7 @@ import faiss
 
 import json
 import uuid
+import hashlib
 
 load_dotenv()
 
@@ -136,14 +137,13 @@ def upload_file(
         faiss.normalize_L2(query_np)
         query_result = vector_store.search(query , "similarity")
     elif vector_db == "chromadb":
-        file_id = str(uuid.uuid4())
-        if os.path.isdir("chroma_db") and os.listdir("chroma_db"):
-            chunk_ids = add_documents_to_chroma(result, file_id=file_id)
-            print(chunk_ids)
-        vector_store = get_chroma_store()
-        query_result = vector_store.similarity_search(query,k=2)
 
-    answer = "\\n \\n".join(doc.page_content for doc in query_result)
+        file_id = hashlib.sha256(str(file.filename).encode("utf-8")).hexdigest()
+        vector_store = get_chroma_store()
+        add_documents_to_chroma(result,file_id,"pdf_chunks")
+        query_result = vector_store.similarity_search_with_score(query,k=2)
+
+    answer = "\\n \\n".join( res.page_content  for res , score in query_result)
 
     page_content = [doc.page_content for doc in result]
 
@@ -171,7 +171,7 @@ def update_chunk(payload: UpdateChunkRequest):
 def update_policy(payload: UpdatePolicyRequest):
     vector_store = get_chroma_store()
  
-    # semantic search to find the chunk that talks about this policy
+    
     results = vector_store.similarity_search(payload.search_text, k=1)
  
     if not results:
@@ -179,8 +179,7 @@ def update_policy(payload: UpdatePolicyRequest):
  
     target_doc = results[0]
  
-    # find its actual Chroma id (similarity_search doesn't return ids directly,
-    # so we match on content — better: store a stable chunk_id in metadata at insert time)
+    
     all_matches = vector_store.get(where_document={"$contains": payload.search_text})
  
     if not all_matches["ids"]:
