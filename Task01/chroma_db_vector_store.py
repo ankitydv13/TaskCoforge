@@ -1,6 +1,6 @@
 from pathlib import Path
 from typing import List
-import uuid
+
  
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
@@ -9,23 +9,34 @@ from embedding import embedding
 
 import hashlib
 
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
 #TODO : Use of the os module 
 CHROMA_DIR = Path("chroma_db")
 CHROMA_DIR.mkdir(exist_ok=True)
 
 # Todo: Take from the env and have multiple collections->(10)
-COLLECTION_NAME = "pdf_chunks"
+COLLECTION_LIST = os.getenv("COLLECTIONS").split(",")
 
 import chromadb
- 
- 
-def get_chroma_store() -> Chroma:
 
+def get_chroma_client():
     client = chromadb.PersistentClient(CHROMA_DIR)
+    print(client.list_collections())
+    for name in COLLECTION_LIST:
+        client.get_or_create_collection(name)
+    return client
+ 
+def get_chroma_store(collection_name:str) -> Chroma:
+
+    client = get_chroma_client()
     
     return Chroma(
         client = client,
-        collection_name=COLLECTION_NAME,
+        collection_name=collection_name,
         embedding_function=embedding
     )
 
@@ -36,7 +47,7 @@ def create_chunk_id(file_id:str,content:str):
  
 def add_documents_to_chroma(documents: List[Document], file_id: str , collection_name : str) -> List[str]:
     
-    vector_store = get_chroma_store()
+    vector_store = get_chroma_store(collection_name)
     client = vector_store._client
     collection = client.get_collection(collection_name)
  
@@ -85,3 +96,6 @@ def delete_chunks_by_metadata(key: str, value) -> int:
         vector_store.delete(ids=ids_to_delete)
  
     return len(ids_to_delete)
+
+if __name__ == "__main___":
+    get_chroma_client()

@@ -48,8 +48,10 @@ from embedding import embedding
 import faiss
 
 import json
-import uuid
+
 import hashlib
+
+from models.ChromaCollectionsEnum import CollectionEnum
 
 load_dotenv()
 
@@ -65,6 +67,8 @@ def upload_file(
         ChunkingStrategy.CharacterChunk,
     vector_db : VectorStoreEnum = 
         VectorStoreEnum.chromadb,
+    chroma_collections : CollectionEnum =
+        CollectionEnum.Coll1,
     query : str = Query(...),
     chunk_config: str = Form(...),
     file: UploadFile = File(...)
@@ -76,6 +80,7 @@ def upload_file(
     chunk_overlap = chunk_config_obj.chunk_overlap
     metadata = chunk_config_obj.metadata
     separator = chunk_config_obj.separators
+
     
     # import pdb; pdb.set_trace()
     if not file.filename:
@@ -139,8 +144,9 @@ def upload_file(
     elif vector_db == "chromadb":
 
         file_id = hashlib.sha256(str(file.filename).encode("utf-8")).hexdigest()
-        vector_store = get_chroma_store()
-        add_documents_to_chroma(result,file_id,"pdf_chunks")
+        vector_store = get_chroma_store(chroma_collections.value)
+        
+        add_documents_to_chroma(result,file_id,chroma_collections.value)
         query_result = vector_store.similarity_search_with_score(query,k=2)
 
     answer = "\\n \\n".join( res.page_content  for res , score in query_result)
@@ -190,6 +196,22 @@ def update_policy(payload: UpdatePolicyRequest):
     update_document_by_id(doc_id, payload.new_text)
  
     return {"status": "updated", "doc_id": doc_id, "old_text": target_doc.page_content}
+
+@app.get("/api/search")
+def search(
+    query : str = Query(...) ,
+    collection_name : CollectionEnum = Query(...),
+    top_k_result : int = Query(...)
+):
+    print(collection_name.value)
+    vector_store = get_chroma_store(collection_name.value)
+    result = vector_store.similarity_search(query,top_k_result)
+    if(len(result)==0):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="Nothing is Found in Collection")
+    for x in result:
+        print(x.page_content)
+        print()
+
 
 
 
