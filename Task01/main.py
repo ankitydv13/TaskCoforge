@@ -209,7 +209,7 @@ def search(
     if(len(result)==0):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="Nothing is Found in Collection")
     for x in result:
-        print(x.page_content)
+        print(x)
         print()
 
 
