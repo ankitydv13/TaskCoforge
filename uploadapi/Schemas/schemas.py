@@ -12,5 +12,8 @@ class LLMResponse(BaseModel):
     answer : str
     chunks : list[str]
     scores : list[float]
-    
+
+class ChatSessionResponse(BaseModel):
+    session_id: str
+
 upload_progress = {}

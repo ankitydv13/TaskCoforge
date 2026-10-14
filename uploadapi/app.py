@@ -5,7 +5,8 @@ from routers.EvaluationRoutes.evaluation_routes import router as eval_router
 
 from contextlib import asynccontextmanager
 from Services.llm_services import LLMService
-from database.database import engine , Base , get_db
+from database import model
+from database.database import engine
 
 import os
 import shutil
@@ -13,12 +14,12 @@ from Configs.config import settings
 
 @asynccontextmanager
 async def lifespan(app_:FastAPI):
-    print("Creating Object Of LLM Services")
-    app.state.llm_service = LLMService("openai")
-
     print("Connection to database")
     async with engine.begin() as conn:
-        conn.run_sync(Base.metadata.create_all)
+        await conn.run_sync(model.Base.metadata.create_all)
+
+    print("Creating Object Of LLM Services")
+    app_.state.llm_service = LLMService("openai")
     
     try:
         yield

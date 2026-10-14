@@ -1,7 +1,13 @@
+from pathlib import Path
+
 from sqlalchemy.ext.asyncio import create_async_engine , AsyncSession , async_sessionmaker
+from sqlalchemy.engine import URL
 from sqlalchemy.orm import DeclarativeBase
 
-DATABASE_URL = "sqlite+aiosqlite:///./policy.db"
+DATABASE_URL = URL.create(
+    "sqlite+aiosqlite",
+    database=str(Path(__file__).resolve().parent.parent / "policy.db"),
+)
 
 engine = create_async_engine(
     url = DATABASE_URL,
@@ -22,7 +28,6 @@ class Base(DeclarativeBase):
 async def get_db():
     async with AsyncLocalSession() as db:
         yield db
-
 
 
 
